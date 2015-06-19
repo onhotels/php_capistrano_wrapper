@@ -1,0 +1,61 @@
+#!/usr/bin/php
+<?php
+/**
+*
+* This script will execute Capistrano tasks and start and stop services
+* @category Deployment
+* @package Deployment
+* @author Andrea Cannuni <donot@disturb.com>
+* @copyright Copyright (c) 2015, OnHotels.com
+* @title wrapper
+* @date 20150616
+* @version GIT: 1.0
+* @example wrap --help
+* @link http://www.onhotels.com
+* PHP version 5.6.9 (cli)
+* ==============================================================================
+*/
+
+/**
+* Executes functions based on script arguments
+*/
+require_once 'wrapper_includes/classes/usage.class.php';
+
+$usageObj = new Usage();
+$config_file = $usageObj->readArgs();
+
+if ($config_file) {
+    $config_body = file_get_contents($config_file);
+    
+    if ($settings = json_decode($config_body, true)) {
+        foreach ($settings['stages'] as $stage) {
+            foreach ($stage["projects"] as $project) {
+                foreach ($project["tasks"] as $task_key => $task) {
+                    if (($task_key == "start") || ($task_key == "stop") || ($task_key == "restart") || ($task_key == "status")) {
+                        foreach ($task as $service_key => $service) {
+                            $command = "service service_name='". $service['name'] . "' service_command='". $task_key ."'";
+                            if (isset($service['parameter'])) {
+                                $command .= " service_parameter='". $service['parameter'] ."'";
+                            }
+                        }
+                    } elseif ($task_key == "deploy") {
+                        $command = $task_key;
+                        foreach ($task as $task_param_key => $task_param) {
+                            if ($task_param_key == "subtask") {
+                                $command .= ":". $task_param;
+                            } elseif ($task_param_key == "branch") {
+                                $command .= " branch='". $task_param ."'";
+                            }
+                        }
+                    }
+                    $usageObj->executeCommand("cap ". $project["name"] .":". $stage["name"] ." ". $command);
+                }
+            }
+        }
+    } else {
+        die("[ERROR] Invalid JSON syntax.\n");
+    }
+} else {
+    die("[ERROR] Config file not returned from Usage class.\n");
+}
+?>

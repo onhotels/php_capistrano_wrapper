@@ -1,0 +1,47 @@
+{
+    "stages": [
+        {
+            "name": "staging",
+            "hostname": "hostname.domain.com",
+            "projects": [
+                {
+                    "name": "project1",
+                    "tasks": {
+                        "stop": [
+                            {
+                                "name": "httpd",
+                                "parameter": "graceful"
+                            }
+                        ],
+                        "deploy": {
+                            "subtask": "check",
+                            "branch": "branch_name"
+                        }
+                    }
+                },
+                {
+                    "name": "project2",
+                    "tasks": {
+                        "deploy": {
+                            "branch": "branch_name"
+                        }
+                    }
+                },
+                {
+                    "name": "project3",
+                    "tasks": {
+                        "deploy": {
+                            "subtask": "check",
+                            "branch": "branch_name"
+                        },
+                        "start": [
+                            {
+                                "name": "httpd"
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}
